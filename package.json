@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && .\\venv\\Scripts\\activate && uvicorn app:app --reload --port 8000\"",
+    "update-venv": "cd backend && .\\venv\\Scripts\\activate && pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
