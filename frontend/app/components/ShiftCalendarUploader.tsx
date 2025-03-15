@@ -1,3 +1,4 @@
+// frontend/app/components/ShiftCalendarUploader.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,6 @@ import { upload } from "@vercel/blob/client";
 
 export default function ShiftCalendarUploader() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
-    const [_uploadedUrl, setUploadedUrl] = useState<string>("");
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -28,17 +28,16 @@ export default function ShiftCalendarUploader() {
             });
 
             setUploadStatus("Upload successful!");
-            setUploadedUrl(response.url);
 
             // Call the internal Next.js API route
             const apiResponse = await axios.post(
-                "/api/process", // Internal route in App Router
+                "/api/process",
                 {
-                    fileUrl: response.url,
+                    fileUrl: response.url, // Use response.url directly
                     name_to_search: name,
                 },
                 {
-                    responseType: "blob", // For client-side file download
+                    responseType: "blob",
                 }
             );
 

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         const jsonResponse = await handleUpload({
             body,
             request,
-            onBeforeGenerateToken: async (_pathname) => {
+            onBeforeGenerateToken: async () => {
                 // Here you can add authentication/authorization logic
                 // For example, check if user is authenticated
                 // if (!user) throw new Error('Unauthorized');
