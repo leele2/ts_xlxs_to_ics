@@ -6,7 +6,7 @@ import { upload } from "@vercel/blob/client";
 
 export default function ShiftCalendarUploader() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
-    const [uploadedUrl, setUploadedUrl] = useState<string>("");
+    const [_uploadedUrl, setUploadedUrl] = useState<string>("");
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
