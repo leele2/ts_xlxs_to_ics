@@ -70,7 +70,7 @@ export default function ShiftCalendarUploader() {
                 </p>
                 <p className="mt-2">
                     <a
-                        href="https://github.com/leele2/timesheet_xlsx_to_ics"
+                        href="https://github.com/leele2/ts_xlxs_to_ics"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline"
