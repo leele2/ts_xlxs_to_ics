@@ -1,32 +1,35 @@
-# Excel to ICS Converter [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://timesheet-xlsx-to-ics.vercel.app/)
+# Excel to ICS Converter [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://ts-xlxs-to-ics-2zqc.vercel.app/)
 
 ## Overview
-This project provides a web-based tool for uploading an Excel file containing work shifts and converting it into an ICS calendar file. Users can then import the generated ICS file into their preferred calendar applications.
+This project provides a web-based tool for uploading an Excel file containing work shifts and converting it into an ICS calendar file. Users can import the generated ICS file into their preferred calendar applications.
 
 ## Features
 - Upload an Excel (.xlsx) file containing shift data.
 - Search for shifts based on a provided name.
 - Generate an ICS calendar file containing the retrieved shifts.
 - Download the ICS file for easy import into calendar applications.
+- Responsive frontend with real-time status updates.
 
 ## Tech Stack
-- **Backend:** Django
-- **Frontend:** Next.js
-- **Libraries Used:**
-  - `pytz` for timezone handling
-  - `ics` for calendar file generation
-  - `pandas` (used in `read_xls` for Excel processing)
+- **Frontend**: Next.js (React framework hosted on Vercel)
+- **Backend**: FastAPI (Python API hosted on Render)
+- **Libraries Used**:
+  - `pytz` (timezone handling in Python)
+  - `ics` (ICS file generation in Python)
+  - `pandas`/`openpyxl` (Excel processing in Python)
+  - `axios` (HTTP requests in Next.js)
+- **Hosting**:
+  - Frontend: Vercel
+  - Backend: Render
 
 ## 📤 How to Upload Your File
-
-1. Open the application in your web browser.
-2. Select your correctly formatted Excel file (`.xlsx` format).
+1. Open the application in your web browser: [Live Demo](https://ts-xlxs-to-ics-2zqc.vercel.app/).
+2. Select a correctly formatted Excel file (`.xlsx` format).
 3. Enter the name you want to search shifts for.
-4. Click "Upload" to generate an `.ics` file for your calendar
+4. Click "Upload" to process the file and download the generated ICS file.
 
 ### 🗓 Table Format Example
-
-Below is an example of the required structure:
+Below is an example of the required Excel structure:
 
 |          | Sunday      | Monday      | Tuesday     | Wednesday   | Thursday    | Friday      | Saturday    |
 |----------|------------|------------|------------|------------|------------|------------|------------|
@@ -37,82 +40,101 @@ Below is an example of the required structure:
 | 11:30-16:30 | Wendy       | Xavier     | Yvonne     | Zach       | Amy        | Brian      | Chloe      |
 
 ## ✅ Accepted Data Formats
-
-To ensure proper processing, the following data formats must be used:
+To ensure proper processing, use the following formats:
 
 ### **1. Days of the Week**
-- Must be written as:  
-  `Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday`
+- Must be: `Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday`
 
 ### **2. Dates**
-- Format: `26th Jan`, `27th Jan`, `28th Jan`  
-- The day should be a number with `st`, `nd`, `rd`, or `th` suffix, followed by a three-letter month abbreviation.
+- Format: `26th Jan`, `27th Jan`, `28th Jan`
+- Day with `st`, `nd`, `rd`, or `th` suffix, followed by a three-letter month abbreviation.
 
 ### **3. Shift Times**
-- Format: `HH:MM-HH:MM`  
-- Example: `09:00-17:00`, `10:30-15:30`  
-- Must use a 24-hour format.
+- Format: `HH:MM-HH:MM` (24-hour)
+- Example: `09:00-17:00`, `10:30-15:30`
 
 ### **4. Employee Names**
-- Each shift slot should contain only one name.
-- Example: `Alice`, `Bob`, `Charlie`, etc.
+- One name per shift slot (e.g., `Alice`, `Bob`).
 
 ## Installation
 ### Prerequisites
-- Python 3.8+
-- pip
-- Virtual environment (optional but recommended)
+- **Python 3.8+** (for backend)
+- **Node.js 18+** (for frontend)
+- **pip** and **npm**
 
-### Setup
+### Backend Setup
 1. Clone the repository:
    ```sh
-   git clone https://github.com/your-repo/shift-calendar.git
-   cd shift-calendar
+   git clone https://github.com/your-repo/excel-to-ics-converter.git
+   cd excel-to-ics-converter/backend
    ```
 2. Create and activate a virtual environment:
    ```sh
    python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 3. Install dependencies:
    ```sh
    pip install -r requirements.txt
    ```
-4. Run the Django server:
-   ```sh
-   python manage.py runserver
+4. Set environment variables (e.g., in `backend/.env`):
+   ```text
+   CORS_ORIGIN_REGEX=http://localhost:3000|https://.*\.vercel\.app
    ```
-5. Access the app at `http://127.0.0.1:8000/`.
+5. Run the FastAPI server:
+   ```sh
+   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```sh
+   cd ../frontend
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Set environment variables (e.g., in `frontend/.env.local`):
+   ```text
+   PYTHON_API_URL=http://localhost:8000
+   ```
+4. Run the Next.js development server:
+   ```sh
+   npm run dev
+   ```
+5. Access the app at `http://localhost:3000`.
 
 ## Usage
-1. Navigate to the web interface.
-2. Select an Excel file (.xlsx) that contains shift data.
-3. Enter the name of the person whose shifts you want to extract.
-4. Click "Upload" to process the file.
-5. Download the generated ICS file and import it into your preferred calendar application.
+1. Start the backend (`uvicorn app:app --port 8000`).
+2. Start the frontend (`npm run dev`).
+3. Open `http://localhost:3000`, upload an Excel file, enter a name, and download the ICS file.
 
 ## Deployment
-This project is deployed on **Vercel**. Below is the relevant `vercel.json` configuration:
-```json
-{
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/wsgi.py"
-    }
-  ],
-  "functions": {
-    "api/wsgi.py": {
-      "maxDuration": 60
-    }
-  }
-}
-```
+### Frontend (Vercel)
+- Deployed on Vercel with automatic scaling.
+- Environment variables in Vercel dashboard:
+  ```text
+  PYTHON_API_URL=https://your-python-api.onrender.com
+  ```
+- Command: `vercel --prod`
+
+### Backend (Render)
+- Deployed on Render as a single web service.
+- Start command:
+  ```sh
+  uvicorn app:app --host 0.0.0.0 --port $PORT
+  ```
+- Environment variables in Render dashboard:
+  ```text
+  CORS_ORIGIN_REGEX=http://localhost:3000|https://.*\.vercel\.app
+  ```
 
 ## Troubleshooting
-- **Timeout issues**: Ensure `maxDuration` is set appropriately in `vercel.json`.
-- **File upload errors**: Verify that your Excel file follows the expected format.
-- **Calendar import issues**: Make sure your calendar app supports `.ics` files.
+- **504 Timeout**: Processing exceeds Vercel’s 10-second limit (Hobby plan). Optimize backend to complete within 10 seconds or upgrade to Vercel Pro (60 seconds).
+- **CORS Errors**: Verify `CORS_ORIGIN_REGEX` matches your frontend URL.
+- **File Upload Errors**: Ensure Excel file follows the specified format.
+- **Calendar Import Issues**: Confirm your calendar app supports `.ics` files.
 
 ## Future Features
 - **🔹 More Flexible Parsing** – Support for different table structures, date formats, and column arrangements.
