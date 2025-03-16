@@ -60,7 +60,7 @@ async def process_file(data: ProcessRequest):
 
         # Download the file
         logger.info(f"Downloading file from: {file_url}")
-        response = requests.get(file_url)
+        response = requests.get(file_url, stream=True)
         response.raise_for_status()
         file_stream = io.BytesIO(response.content)
         logger.info("File downloaded successfully")
