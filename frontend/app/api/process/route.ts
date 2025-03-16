@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import { del } from "@vercel/blob";
 
+export const maxDuration = 60; // Increase timeout limit
+
+
 export async function POST(req: NextRequest) {
     try {
         const { fileUrl, name_to_search } = await req.json();
