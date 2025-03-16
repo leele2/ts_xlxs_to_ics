@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from os import getenv
 import requests
 import io
 import logging
@@ -10,10 +11,12 @@ from utils.ics_gen import generate_ics
 
 app = FastAPI()
 
+cors_regex = getenv("CORS_ORIGIN_REGEX", "http://localhost:3000")
+
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://your-vercel-app.vercel.app"],
+    allow_origins=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
