@@ -27,7 +27,7 @@ export default function ShiftCalendarUploader() {
                 handleUploadUrl: "/api/upload",
             });
 
-            setUploadStatus("Upload successful!");
+            setUploadStatus("Upload successful! We are now calling the api to process the file.");
 
             // Call the internal Next.js API route
             const apiResponse = await axios.post(
