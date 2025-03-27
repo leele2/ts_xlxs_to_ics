@@ -98,10 +98,18 @@ def fix_date(date_str: str) -> str:
         raise ValueError(f"Invalid date format: {date_str}. Expected format: 'DDst/nd/rd/th Month' or 'YYYY-MM-DD'")
 
     month_map = {
-        "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
-        "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
-        "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12",
-        "March": "03", "April": "04"
+        "Jan": "01", "January": "01",
+        "Feb": "02", "February": "02",
+        "Mar": "03", "March": "03",
+        "Apr": "04", "April": "04",
+        "May": "05", "May": "05",
+        "Jun": "06", "June": "06",
+        "Jul": "07", "July": "07",
+        "Aug": "08", "August": "08",
+        "Sep": "09", "September": "09",
+        "Oct": "10", "October": "10",
+        "Nov": "11", "November": "11",
+        "Dec": "12", "December": "12"
     }
 
     day = ''.join(filter(str.isdigit, parts[0]))
