@@ -347,7 +347,8 @@ def find_shifts(data_frames: Dict[str, pd.DataFrame], names: Union[str, List[str
                                 "Shift Time": primary_dm_shift_time,
                                 "Start Time": start_time,
                                 "Duration": duration,
-                                "Name": name
+                                "Name": name,
+                                "Title": str(primary_dm_value)
                             })
                     if matching_names:
                         continue  # Skip other shifts if Primary DM is found
@@ -376,7 +377,8 @@ def find_shifts(data_frames: Dict[str, pd.DataFrame], names: Union[str, List[str
                                 "Shift Time": shift_time,
                                 "Start Time": start_time,
                                 "Duration": duration,
-                                "Name": name
+                                "Name": name,
+                                "Title": str(cell_value)
                             })
                             shift_found.add(name)
 

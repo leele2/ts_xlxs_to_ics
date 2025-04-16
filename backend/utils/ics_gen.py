@@ -22,7 +22,7 @@ def generate_ics(shifts, name_to_search):
         event_uid = generate_uid(shift_date, name_to_search.lower())
 
         event = Event()
-        event.name = "Work Shift"
+        event.name = f"shift [{shift["Title"]}]"
         event.begin = localized_start
         event.end = localized_end
         event.uid = event_uid
