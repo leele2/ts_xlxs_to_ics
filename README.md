@@ -4,9 +4,10 @@
 This project provides a web-based tool for uploading an Excel file containing work shifts and converting it into an ICS calendar file. Users can import the generated ICS file into their preferred calendar applications.
 
 ## Features
-- Upload an Excel (.xlsx) file containing shift data.
+- Upload an Excel (.xlsx) file containing shift data (handled client-side using Vercel Blob Storage).
 - Search for shifts based on a provided name.
 - Generate an ICS calendar file containing the retrieved shifts.
+- Uses a hashing function to create a unique UID for each event based on the shift name and date, ensuring no duplicate entries and allowing updates if the shift moves to a time on the same date (depending on calendar app support).
 - Download the ICS file for easy import into calendar applications.
 - Responsive frontend with real-time status updates.
 
@@ -21,6 +22,7 @@ This project provides a web-based tool for uploading an Excel file containing wo
 - **Hosting**:
   - Frontend: Vercel
   - Backend: Render
+  - File Upload Storage: Vercel Blob Storage
 
 ## 📤 How to Upload Your File
 1. Open the application in your web browser: [Live Demo](https://ts-xlxs-to-ics-2zqc.vercel.app/).
@@ -83,7 +85,7 @@ To ensure proper processing, use the following formats:
    ```
 5. Run the FastAPI server:
    ```sh
-   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
 ### Frontend Setup
@@ -97,7 +99,8 @@ To ensure proper processing, use the following formats:
    ```
 3. Set environment variables (e.g., in `frontend/.env.local`):
    ```text
-   PYTHON_API_URL=http://localhost:8000
+   NEXT_PUBLIC_PYTHON_API_URL=http://localhost:8000
+   VERCEL_BLOB_SECRET=your-vercel-blob-secret-key
    ```
 4. Run the Next.js development server:
    ```sh
@@ -106,7 +109,7 @@ To ensure proper processing, use the following formats:
 5. Access the app at `http://localhost:3000`.
 
 ## Usage
-1. Start the backend (`uvicorn app:app --port 8000`).
+1. Start the backend (`uvicorn app.main:app --port 8000`).
 2. Start the frontend (`npm run dev`).
 3. Open `http://localhost:3000`, upload an Excel file, enter a name, and download the ICS file.
 
@@ -115,23 +118,22 @@ To ensure proper processing, use the following formats:
 - Deployed on Vercel with automatic scaling.
 - Environment variables in Vercel dashboard:
   ```text
-  PYTHON_API_URL=https://your-python-api.onrender.com
+  NEXT_PUBLIC_PYTHON_API_URL=https://your-python-api.onrender.com
+  VERCEL_BLOB_SECRET=your-vercel-blob-secret-key
   ```
-- Command: `vercel --prod`
 
 ### Backend (Render)
 - Deployed on Render as a single web service.
-- Start command:
-  ```sh
-  uvicorn app:app --host 0.0.0.0 --port $PORT
-  ```
-- Environment variables in Render dashboard:
+- API available at `https://your-python-api.onrender.com`
+- Environment variables:
   ```text
-  CORS_ORIGIN_REGEX=http://localhost:3000|https://.*\.vercel\.app
+  CORS_ORIGIN_REGEX=https://.*\.vercel\.app
   ```
+- Auto-deploy from GitHub on push to `main` branch.
+
 
 ## Troubleshooting
-- **504 Timeout**: Processing exceeds Vercel’s 10-second limit (Hobby plan). Optimize backend to complete within 10 seconds or upgrade to Vercel Pro (60 seconds).
+- **504 Timeout**: Processing exceeds Vercel’s 60-second limit (Hobby plan). Optimize backend or upgrade to Vercel Pro.
 - **CORS Errors**: Verify `CORS_ORIGIN_REGEX` matches your frontend URL.
 - **File Upload Errors**: Ensure Excel file follows the specified format.
 - **Calendar Import Issues**: Confirm your calendar app supports `.ics` files.
