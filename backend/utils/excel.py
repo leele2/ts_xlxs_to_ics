@@ -14,14 +14,7 @@ EXCLUDED_PREFIXES = ["open", "close", "flex"]
 DATE_ROW_OFFSET = 1  # Row offset for Primary DM (row below date row)
 
 def format_part(part: str) -> str:
-    """Format a date part (e.g., '23/3' -> '23/03').
-
-    Args:
-        part (str): Date part in the format 'DD/M' or 'D/M'.
-
-    Returns:
-        str: Formatted date part as 'DD/MM'.
-    """
+    """Format a date part (e.g., '23/3' -> '23/03')."""
     if len(part) > 2:
         return f"{int(part[0:2]):02d}/{int(part[2:]):02d}"
     elif len(part) == 2:
@@ -29,28 +22,14 @@ def format_part(part: str) -> str:
     return f"{int(part[0]):02d}/02"
 
 def fix_title(title: str) -> str:
-    """Fix the title of a sheet by formatting date parts.
-
-    Args:
-        title (str): Sheet title in the format 'DD/M-DD/M'.
-
-    Returns:
-        str: Formatted title as 'DD/MM-DD/MM'.
-    """
+    """Fix the title of a sheet by formatting date parts."""
     parts = title.split('-')
     part1 = format_part(parts[0])
     part2 = format_part(parts[1])
     return f"{part1}-{part2}"
 
 def read_xls(xls_path: str) -> Dict[str, pd.DataFrame]:
-    """Read visible sheets from an Excel file into DataFrames.
-
-    Args:
-        xls_path (str): Path to the Excel file.
-
-    Returns:
-        Dict[str, pd.DataFrame]: Dictionary of sheet titles to DataFrames.
-    """
+    """Read visible sheets from an Excel file into DataFrames."""
     data_frames = {}
     with pd.ExcelFile(xls_path) as xls:
         for sheet in xls.sheet_names:
@@ -68,31 +47,18 @@ def read_xls(xls_path: str) -> Dict[str, pd.DataFrame]:
     return data_frames
 
 def fix_date(date_str: str) -> str:
-    """Convert a date string to 'DD/MM/YYYY' format, handling special cases.
-
-    Args:
-        date_str (str): Date string (e.g., '2nd April', 'APRIL FOOLS!', '2025-04-01').
-
-    Returns:
-        str: Formatted date as 'DD/MM/YYYY'.
-
-    Raises:
-        ValueError: If the date format is invalid.
-    """
+    """Convert a date string to 'DD/MM/YYYY' format, handling special cases."""
     today = datetime.today()
     current_month = today.month
     current_year = today.year
 
-    # Handle special cases
     if date_str == "APRIL FOOLS!":
         return f"01/04/{current_year}"
 
-    # Handle ISO format (e.g., '2025-04-01')
     if re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         return date_obj.strftime("%d/%m/%Y")
 
-    # Handle standard format (e.g., '2nd April')
     parts = date_str.split()
     if len(parts) != 2:
         raise ValueError(f"Invalid date format: {date_str}. Expected format: 'DDst/nd/rd/th Month' or 'YYYY-MM-DD'")
@@ -132,14 +98,7 @@ def fix_date(date_str: str) -> str:
     return f"{day.zfill(2)}/{month_number}/{year}"
 
 def is_date_in_past(date_str: str) -> bool:
-    """Check if a date is in the past.
-
-    Args:
-        date_str (str): Date in 'DD/MM/YYYY' format.
-
-    Returns:
-        bool: True if the date is in the past, False otherwise.
-    """
+    """Check if a date is in the past."""
     date_obj = datetime.strptime(date_str, "%d/%m/%Y")
     current_date = datetime.today().date()
     return date_obj.date() < current_date
@@ -148,15 +107,26 @@ def extract_shift_details(shift_time: str) -> Tuple[Optional[str], Optional[floa
     """Extract start time and duration from a shift time string.
 
     Args:
-        shift_time (str): Shift time in the format 'HH:MM-HH:MM'.
+        shift_time (str): Shift time, e.g., 'HH:MM-HH:MM' or 'Name (HH:MM-HH:MM)'.
 
     Returns:
         Tuple[Optional[str], Optional[float]]: Start time (HH:MM) and duration in hours, or (None, None) if invalid.
     """
+    if not shift_time:
+        logger.warning("Empty shift time provided")
+        return None, None
+
+    # Try to extract shift time from parentheses, e.g., "Bob (09:00-15:30)"
+    parenthetical_match = re.match(r".*\((\d{1,2}:\d{2}-\d{1,2}:\d{2})\).*", shift_time.strip())
+    if parenthetical_match:
+        shift_time = parenthetical_match.group(1)
+
+    # Match standard shift time format: HH:MM-HH:MM
     match = re.match(r"(\d{1,2}:\d{2})-(\d{1,2}:\d{2})", shift_time)
     if not match:
         logger.warning(f"Invalid shift format: {shift_time}")
         return None, None
+
     start_time_str, end_time_str = match.groups()
     time_format = "%H:%M"
     try:
@@ -172,14 +142,7 @@ def extract_shift_details(shift_time: str) -> Tuple[Optional[str], Optional[floa
         return None, None
 
 def find_dates(df: pd.DataFrame) -> List[Tuple[int, int, str]]:
-    """Find date positions in the DataFrame.
-
-    Args:
-        df (pd.DataFrame): DataFrame to search for dates.
-
-    Returns:
-        List[Tuple[int, int, str]]: List of (row, col, date) tuples.
-    """
+    """Find date positions in the DataFrame."""
     date_positions = []
     for row_idx in range(min(MAX_DATE_ROWS, df.shape[0])):
         for col_idx in range(df.shape[1]):
@@ -187,20 +150,12 @@ def find_dates(df: pd.DataFrame) -> List[Tuple[int, int, str]]:
             fixed_date = is_date_like(value)
             if fixed_date:
                 date_positions.append((row_idx, col_idx, value))
-        # Stop searching if we've found dates in this row
         if any(row == row_idx for row, _, _ in date_positions):
             break
     return date_positions
 
 def group_dates_into_sections(date_positions: List[Tuple[int, int, str]]) -> List[List[Tuple[int, int, str]]]:
-    """Group date positions into sections based on column proximity.
-
-    Args:
-        date_positions (List[Tuple[int, int, str]]): List of (row, col, date) tuples.
-
-    Returns:
-        List[List[Tuple[int, int, str]]]: List of sections, where each section is a list of (row, col, date) tuples.
-    """
+    """Group date positions into sections based on column proximity."""
     if not date_positions:
         return []
     date_sections = []
@@ -218,15 +173,7 @@ def group_dates_into_sections(date_positions: List[Tuple[int, int, str]]) -> Lis
     return date_sections
 
 def find_shift_times(df: pd.DataFrame, start_col: int) -> List[Tuple[int, int, str]]:
-    """Find shift time positions in the specified columns.
-
-    Args:
-        df (pd.DataFrame): DataFrame to search for shift times.
-        start_col (int): Starting column for the section.
-
-    Returns:
-        List[Tuple[int, int, str]]: List of (row, col, shift_time) tuples.
-    """
+    """Find shift time positions in the specified columns."""
     shift_time_positions = []
     search_cols = range(max(0, start_col - 1), start_col + 1)
     for row_idx in range(df.shape[0]):
@@ -237,14 +184,7 @@ def find_shift_times(df: pd.DataFrame, start_col: int) -> List[Tuple[int, int, s
     return shift_time_positions
 
 def is_date_like(value: Union[str, float, int]) -> Optional[str]:
-    """Check if a value is a date-like string and return the fixed date if valid.
-
-    Args:
-        value: Value to check.
-
-    Returns:
-        Optional[str]: Fixed date in 'DD/MM/YYYY' format if valid, None otherwise.
-    """
+    """Check if a value is a date-like string and return the fixed date if valid."""
     if pd.isna(value):
         return None
     try:
@@ -254,14 +194,7 @@ def is_date_like(value: Union[str, float, int]) -> Optional[str]:
         return None
 
 def is_shift_time_like(value: Union[str, float, int]) -> bool:
-    """Check if a value is a shift time-like string.
-
-    Args:
-        value: Value to check.
-
-    Returns:
-        bool: True if the value is a shift time (e.g., 'HH:MM-HH:MM'), False otherwise.
-    """
+    """Check if a value is a shift time-like string."""
     if pd.isna(value):
         return False
     value_str = str(value).strip()
@@ -334,17 +267,25 @@ def find_shifts(data_frames: Dict[str, pd.DataFrame], names: Union[str, List[str
                         primary_dm_shift_time = shift_time
                         break
 
-                if pd.notna(primary_dm_value) and primary_dm_shift_time:
+                # Check for embedded shift time in Primary DM cell
+                embedded_shift_time = None
+                if pd.notna(primary_dm_value):
+                    if re.search(r"\(\d{1,2}:\d{2}-\d{1,2}:\d{2}\)", str(primary_dm_value)):
+                        embedded_shift_time = primary_dm_value
+
+                if pd.notna(primary_dm_value) and (primary_dm_shift_time or embedded_shift_time):
                     primary_dm_str = str(primary_dm_value).lower()
                     matching_names = [name for name in names if name in primary_dm_str]
                     for name in matching_names:
-                        logger.info(f"Found Primary DM match for {name} at {date}, shift time {primary_dm_shift_time}")
-                        start_time, duration = extract_shift_details(primary_dm_shift_time)
+                        logger.info(f"Found Primary DM match for {name} at {date}")
+                        # Prefer embedded shift time if present
+                        shift_time_to_use = embedded_shift_time if embedded_shift_time else primary_dm_shift_time
+                        start_time, duration = extract_shift_details(shift_time_to_use)
                         if start_time is not None and duration is not None:
                             results.append({
                                 "Sheet": sheet_title,
                                 "Date": fixed_date,
-                                "Shift Time": primary_dm_shift_time,
+                                "Shift Time": shift_time_to_use,
                                 "Start Time": start_time,
                                 "Duration": duration,
                                 "Name": name,
@@ -367,14 +308,18 @@ def find_shifts(data_frames: Dict[str, pd.DataFrame], names: Union[str, List[str
                         cell_str = str(cell_value).lower()
                         matching_names = [name for name in names if name in cell_str and name not in shift_found]
                         for name in matching_names:
-                            logger.info(f"Found match for {name} at {date}, shift time {shift_time}")
-                            start_time, duration = extract_shift_details(shift_time)
+                            logger.info(f"Found match for {name} at {date}")
+                            # Check for embedded shift time in cell, e.g., "Bob (09:00-15:30)"
+                            shift_time_to_use = shift_time
+                            if re.search(r"\(\d{1,2}:\d{2}-\d{1,2}:\d{2}\)", str(cell_value)):
+                                shift_time_to_use = cell_value
+                            start_time, duration = extract_shift_details(shift_time_to_use)
                             if start_time is None or duration is None:
                                 continue
                             results.append({
                                 "Sheet": sheet_title,
                                 "Date": fixed_date,
-                                "Shift Time": shift_time,
+                                "Shift Time": shift_time_to_use,
                                 "Start Time": start_time,
                                 "Duration": duration,
                                 "Name": name,
