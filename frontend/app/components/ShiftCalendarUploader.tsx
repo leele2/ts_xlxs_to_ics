@@ -1,15 +1,25 @@
+// frontend/app/components/ShiftCalendarUploader.tsx
 "use client";
 
 import { useState } from "react";
 import axios from "axios";
 import { upload } from "@vercel/blob/client";
+import { Loader2, CloudUpload, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function ShiftCalendarUploader() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [step, setStep] = useState<number>(0);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setUploadStatus("Uploading...");
+        setIsLoading(true);
+        setUploadStatus("Uploading file...");
+        setStep(1);
+        setError(null);
+        setIsSuccess(false);
 
         try {
             const formData = new FormData(event.currentTarget);
@@ -26,7 +36,8 @@ export default function ShiftCalendarUploader() {
                 handleUploadUrl: "/api/upload",
             });
 
-            setUploadStatus("Upload successful! Processing file...");
+            setUploadStatus("File uploaded. Processing...");
+            setStep(2);
 
             // Call the internal Next.js API route
             const apiResponse = await axios.post(
@@ -40,7 +51,6 @@ export default function ShiftCalendarUploader() {
                 }
             );
 
-            // Handle the ICS file download
             const url = window.URL.createObjectURL(
                 new Blob([apiResponse.data])
             );
@@ -51,122 +61,130 @@ export default function ShiftCalendarUploader() {
             link.click();
             document.body.removeChild(link);
 
+            setIsSuccess(true);
             setUploadStatus("File processed and downloaded successfully!");
+            setStep(3);
         } catch (error) {
-            setUploadStatus(`Error: ${(error as Error).message}`);
+            const msg = (error as Error).message || "Something went wrong.";
+            setError(msg);
+            setUploadStatus(`Error: ${msg}`);
+            setStep(0);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center h-screen bg-gray-200">
-            <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-sm w-full">
-                <h1 className="text-2xl font-bold text-gray-800">
-                    Shift Calendar
-                </h1>
-                <p className="text-gray-600 mt-2">
-                    Upload an Excel file containing your work shifts and
-                    generate an ICS calendar file.
-                </p>
-                <p className="mt-2">
-                    <a
-                        href="https://github.com/leele2/ts_xlxs_to_ics"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                    >
-                        Learn More
-                    </a>
-                </p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-slate-950 flex items-center justify-center p-6">
+            <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-10 w-full max-w-xl relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-tr from-blue-500 to-purple-600 opacity-20 rounded-full blur-3xl animate-pulse"></div>
+                <div className="text-center z-10 relative">
+                    <h1 className="text-4xl font-extrabold text-white drop-shadow-xl mb-2 animate-fade-in">
+                        🚀 Shift Calendar Uploader
+                    </h1>
+                    <p className="text-gray-300 mb-4">
+                        Upload an Excel file and get your ICS calendar file in
+                        seconds.
+                    </p>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label
+                                htmlFor="name_to_search"
+                                className="text-left block text-gray-300 text-sm font-semibold mb-1"
+                            >
+                                Your Name
+                            </label>
+                            <input
+                                type="text"
+                                id="name_to_search"
+                                name="name_to_search"
+                                required
+                                className="w-full px-4 py-2 bg-white/10 border border-gray-500 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                placeholder="e.g. John Doe"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                htmlFor="fileInput"
+                                className="text-left block text-gray-300 text-sm font-semibold mb-1"
+                            >
+                                Upload Excel File
+                            </label>
+                            <input
+                                type="file"
+                                id="fileInput"
+                                name="excel_file"
+                                accept=".xlsx"
+                                required
+                                className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:bg-gradient-to-r file:from-blue-500 file:to-purple-600 file:hover:opacity-90 file:transition-all file:duration-300 file:cursor-pointer text-white"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className={`flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white ${
+                                isLoading
+                                    ? "bg-gradient-to-r from-yellow-500 to-yellow-700 animate-pulse"
+                                    : isSuccess
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                                    : "bg-gradient-to-r from-blue-600 to-purple-700 hover:scale-105"
+                            }`}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />{" "}
+                                    Uploading...
+                                </>
+                            ) : isSuccess ? (
+                                <>
+                                    <CheckCircle className="mr-2 h-5 w-5" />{" "}
+                                    Success!
+                                </>
+                            ) : error ? (
+                                <>
+                                    <AlertTriangle className="mr-2 h-5 w-5" />{" "}
+                                    Retry
+                                </>
+                            ) : (
+                                <>
+                                    <CloudUpload className="mr-2 h-5 w-5" />{" "}
+                                    Upload File
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-                <h2 className="text-xl font-semibold text-gray-800 mt-6">
-                    Upload Your File
-                </h2>
-
-                <form id="uploadForm" className="mt-4" onSubmit={handleSubmit}>
-                    <label
-                        htmlFor="name_to_search"
-                        className="block text-gray-700 text-left"
-                    >
-                        Name:
-                    </label>
-                    <input
-                        type="text"
-                        id="name_to_search"
-                        name="name_to_search"
-                        required
-                        className="w-full p-2 mt-1 border border-gray-300 rounded-md"
-                    />
-
-                    <label
-                        htmlFor="fileInput"
-                        className="block text-gray-700 text-left mt-4"
-                    >
-                        Upload File:
-                    </label>
-                    <div className="flex items-center mt-1">
-                        <input
-                            type="file"
-                            id="fileInput"
-                            name="excel_file"
-                            accept=".xlsx"
-                            required
-                            className="w-full text-gray-800 bg-white border border-gray-300 rounded-md 
-                                       file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 
-                                       file:text-white file:bg-gray-500 file:hover:bg-gray-600 file:cursor-pointer"
-                        />
+                    <div className="mt-6 text-sm text-gray-400 text-left">
+                        {step > 0 && (
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full ${
+                                            step === 1
+                                                ? "bg-yellow-400 w-1/3 animate-pulse"
+                                                : step === 2
+                                                ? "bg-blue-500 w-2/3 animate-pulse"
+                                                : "bg-green-500 w-full"
+                                        }`}
+                                    ></div>
+                                </div>
+                                <span className="text-xs">
+                                    Step {step} of 3
+                                </span>
+                            </div>
+                        )}
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={
-                            uploadStatus.startsWith("Uploading") ||
-                            uploadStatus.startsWith("Upload successful")
-                        }
-                        className={`w-full mt-4 py-2 rounded-md text-lg transition duration-300 flex justify-center items-center
-        ${
-            uploadStatus.startsWith("Uploading") ||
-            uploadStatus.startsWith("Upload successful")
-                ? "bg-gray-400 cursor-not-allowed text-white"
-                : "bg-blue-500 hover:bg-blue-700 text-white"
-        }
-    `}
-                    >
-                        {uploadStatus.startsWith("Uploading") ||
-                        uploadStatus.startsWith("Upload successful") ? (
-                            <>
-                                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                {uploadStatus.startsWith("Uploading")
-                                    ? "Uploading..."
-                                    : "Processing..."}
-                            </>
-                        ) : uploadStatus.startsWith("File processed") ? (
-                            "✅ Done"
-                        ) : (
-                            "Upload"
-                        )}
-                    </button>
-
-                    <ProgressBar status={uploadStatus} />
-                </form>
+                    <div className="mt-6 text-gray-400 text-xs">
+                        Curious how it works?{" "}
+                        <a
+                            href="https://github.com/leele2/ts_xlxs_to_ics"
+                            className="underline hover:text-blue-400"
+                        >
+                            View on GitHub
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
-    );
-}
-
-// 👇 Progress Bar Component
-function ProgressBar({ status }: { status: string }) {
-    let percentage = 0;
-
-    if (status.startsWith("Uploading")) percentage = 33;
-    else if (status.startsWith("Upload successful")) percentage = 66;
-    else if (status.startsWith("File processed")) percentage = 100;
-
-    return (
-        <div className="w-full mt-4 bg-gray-300 rounded-full h-2 overflow-hidden">
-            <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-500 ease-in-out"
-                style={{ width: `${percentage}%` }}
-            />
         </div>
     );
 }
