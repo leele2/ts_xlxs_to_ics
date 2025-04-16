@@ -1,4 +1,3 @@
-// frontend/app/components/ShiftCalendarUploader.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,13 +26,13 @@ export default function ShiftCalendarUploader() {
                 handleUploadUrl: "/api/upload",
             });
 
-            setUploadStatus("Upload successful! We are now calling the api to process the file.");
+            setUploadStatus("Upload successful! Processing file...");
 
             // Call the internal Next.js API route
             const apiResponse = await axios.post(
                 "/api/process",
                 {
-                    fileUrl: response.url, // Use response.url directly
+                    fileUrl: response.url,
                     name_to_search: name,
                 },
                 {
@@ -78,9 +77,11 @@ export default function ShiftCalendarUploader() {
                         Learn More
                     </a>
                 </p>
+
                 <h2 className="text-xl font-semibold text-gray-800 mt-6">
                     Upload Your File
                 </h2>
+
                 <form id="uploadForm" className="mt-4" onSubmit={handleSubmit}>
                     <label
                         htmlFor="name_to_search"
@@ -102,26 +103,70 @@ export default function ShiftCalendarUploader() {
                     >
                         Upload File:
                     </label>
-                    <input
-                        type="file"
-                        id="fileInput"
-                        name="excel_file"
-                        accept=".xlsx"
-                        required
-                        className="w-full mt-1 border border-gray-300 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-white file:bg-gray-500 file:hover:bg-gray-600 file:cursor-pointer"
-                    />
+                    <div className="flex items-center mt-1">
+                        <input
+                            type="file"
+                            id="fileInput"
+                            name="excel_file"
+                            accept=".xlsx"
+                            required
+                            className="w-full text-gray-800 bg-white border border-gray-300 rounded-md 
+                                       file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 
+                                       file:text-white file:bg-gray-500 file:hover:bg-gray-600 file:cursor-pointer"
+                        />
+                    </div>
 
                     <button
                         type="submit"
-                        className="w-full mt-4 bg-blue-500 text-white py-2 rounded-md text-lg transition duration-300 hover:bg-blue-700"
+                        disabled={
+                            uploadStatus.startsWith("Uploading") ||
+                            uploadStatus.startsWith("Upload successful")
+                        }
+                        className={`w-full mt-4 py-2 rounded-md text-lg transition duration-300 flex justify-center items-center
+        ${
+            uploadStatus.startsWith("Uploading") ||
+            uploadStatus.startsWith("Upload successful")
+                ? "bg-gray-400 cursor-not-allowed text-white"
+                : "bg-blue-500 hover:bg-blue-700 text-white"
+        }
+    `}
                     >
-                        Upload
+                        {uploadStatus.startsWith("Uploading") ||
+                        uploadStatus.startsWith("Upload successful") ? (
+                            <>
+                                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                {uploadStatus.startsWith("Uploading")
+                                    ? "Uploading..."
+                                    : "Processing..."}
+                            </>
+                        ) : uploadStatus.startsWith("File processed") ? (
+                            "✅ Done"
+                        ) : (
+                            "Upload"
+                        )}
                     </button>
+
+                    <ProgressBar status={uploadStatus} />
                 </form>
-                <p id="uploadStatus" className="text-gray-600 mt-4">
-                    {uploadStatus}
-                </p>
             </div>
+        </div>
+    );
+}
+
+// 👇 Progress Bar Component
+function ProgressBar({ status }: { status: string }) {
+    let percentage = 0;
+
+    if (status.startsWith("Uploading")) percentage = 33;
+    else if (status.startsWith("Upload successful")) percentage = 66;
+    else if (status.startsWith("File processed")) percentage = 100;
+
+    return (
+        <div className="w-full mt-4 bg-gray-300 rounded-full h-2 overflow-hidden">
+            <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${percentage}%` }}
+            />
         </div>
     );
 }
