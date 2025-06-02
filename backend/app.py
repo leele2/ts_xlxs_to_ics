@@ -1,10 +1,10 @@
-import datetime
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
+import json
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from os import getenv
-import pytz
+import re
 import requests
 import io
 import logging
@@ -109,4 +109,27 @@ async def process_file(data: ProcessRequest):
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy"}
+@app.get("/api/test", include_in_schema=False)
+async def test_process(request: Request):
+    if request.client.host not in ("127.0.0.1", "::1"):
+        raise HTTPException(status_code=403, detail="Access forbidden: Local only")
+
+    file_stream = "tests/test.xlsx"
+    name_to_search = "emilie"
+    logger.info("Reading Excel file")
+    data_frames = read_xls(file_stream)
+    logger.info(f"Data frames {data_frames}")
+    logger.info("Excel file read successfully")
+
+    logger.info("Reading shift information")
+    shifts = find_shifts(data_frames, name_to_search)
+    logger.info("Shift information read successfully")
+
+    logger.info("Generating ICS file")
+    generate_ics(shifts, name_to_search)
+    logger.info("ICS file generated successfully")
+
+    # Use json.dumps to pretty-print
+    # Sort shifts by the parsed date
+    pretty_json = json.dumps({"Shifts": shifts}, indent=4)
+    return Response(content=pretty_json, media_type="application/json")
