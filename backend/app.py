@@ -8,6 +8,8 @@ import io
 import logging
 from utils.excel import read_xls, find_shifts
 from utils.ics_gen import generate_ics
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 app = FastAPI()
 
@@ -79,8 +81,28 @@ async def process_file(data: ProcessRequest):
         ics_content = generate_ics(shifts, name_to_search)
         logger.info("ICS file generated successfully")
 
-        return Response(content=ics_content, media_type="text/calendar",
-                        headers={"Content-Disposition": "attachment; filename=shifts.ics"})
+        if "google_token" in data.dict():
+            try:
+                credentials = Credentials(token=data.google_token)
+                service = build("calendar", "v3", credentials=credentials)
+
+                for shift in shifts:
+                    event = {
+                        "summary": f"Shift - {shift['role']}",
+                        "start": {
+                            "dateTime": shift["start"].isoformat(),
+                            "timeZone": "Australia/Sydney",  # change to suit
+                        },
+                        "end": {
+                            "dateTime": shift["end"].isoformat(),
+                            "timeZone": "Australia/Sydney",
+                        },
+                    }
+                    service.events().insert(calendarId="primary", body=event).execute()
+
+                logger.info("Events added to Google Calendar.")
+            except Exception as e:
+                logger.error(f"Google Calendar sync failed: {str(e)}")
     except requests.RequestException as e:
         logger.error(f"Failed to download file: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
