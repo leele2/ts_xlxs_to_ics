@@ -14,11 +14,11 @@ from utils.ics_gen import generate_ics, sync_gmail
 app = FastAPI()
 
 cors_regex = getenv("CORS_ORIGIN_REGEX", "http://localhost:3000")
-
+cors_regex = re.compile(cors_regex)
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_regex,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
