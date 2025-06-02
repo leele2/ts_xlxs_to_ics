@@ -1,15 +1,15 @@
+import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from os import getenv
+import pytz
 import requests
 import io
 import logging
 from utils.excel import read_xls, find_shifts
-from utils.ics_gen import generate_ics
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from utils.ics_gen import generate_ics, sync_gmail
 
 app = FastAPI()
 
@@ -90,27 +90,7 @@ async def process_file(data: ProcessRequest):
         logger.info("ICS file generated successfully")
 
         if "google_token" in data.dict():
-            try:
-                credentials = Credentials(token=data.google_token)
-                service = build("calendar", "v3", credentials=credentials)
-
-                for shift in shifts:
-                    event = {
-                        "summary": f"Shift - {shift['role']}",
-                        "start": {
-                            "dateTime": shift["start"].isoformat(),
-                            "timeZone": "Australia/Sydney",  # change to suit
-                        },
-                        "end": {
-                            "dateTime": shift["end"].isoformat(),
-                            "timeZone": "Australia/Sydney",
-                        },
-                    }
-                    service.events().insert(calendarId="primary", body=event).execute()
-
-                logger.info("Events added to Google Calendar.")
-            except Exception as e:
-                logger.error(f"Google Calendar sync failed: {str(e)}")
+            sync_gmail(shifts, name_to_search, data, logger)
 
         return Response(
             content=ics_content,
