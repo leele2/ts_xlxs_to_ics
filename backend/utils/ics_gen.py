@@ -2,12 +2,10 @@ from ics import Calendar, Event
 import pytz
 from datetime import datetime, timedelta
 import hashlib
-import uuid
-
-def generate_uid(employee_name, shift_date):
-    unique_string = f"{employee_name}{shift_date}"
-    hash_val = hashlib.md5(unique_string.encode()).hexdigest()
-    return str(uuid.UUID(hash_val[:32]))
+def generate_uid(shift_date, employee_name):
+    raw = f"{employee_name.lower()}_{shift_date}"
+    hash_val = hashlib.sha256(raw.encode()).hexdigest()
+    return f"shift_{hash_val[:24]}"  # 24 characters = safe, unique, and valid
 
 def generate_ics(shifts, name_to_search):
     cal = Calendar()
