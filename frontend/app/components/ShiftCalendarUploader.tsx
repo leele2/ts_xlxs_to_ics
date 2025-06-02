@@ -16,7 +16,7 @@ import { useState } from "react";
 import axios from "axios";
 import { upload } from "@vercel/blob/client";
 import { Loader2, CloudUpload, CheckCircle, AlertTriangle } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function ShiftCalendarUploader() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
@@ -27,6 +27,16 @@ export default function ShiftCalendarUploader() {
     const [googleToken, setGoogleToken] = useState<string | undefined>(
         undefined
     );
+
+    const login = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            setGoogleToken(tokenResponse.access_token);
+        },
+        onError: () => {
+            console.log("Login Failed");
+        },
+        scope: "openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar", // or other calendar scopes you need
+    });
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -136,22 +146,20 @@ export default function ShiftCalendarUploader() {
                             />
                         </div>
                         {!googleToken ? (
-                            <GoogleLogin
-                                onSuccess={(credentialResponse) => {
-                                    const token = credentialResponse.credential;
-                                    setGoogleToken(token);
-                                }}
-                                onError={() => {
-                                    console.log("Login Failed");
-                                }}
-                            />
+                            <button
+                                type="button" // prevent accidental form submit
+                                onClick={() => login()}
+                                className="flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105"
+                            >
+                                Login with Google
+                            </button>
                         ) : (
                             <button
+                                type="button" // prevent accidental form submit
                                 onClick={() => {
                                     setGoogleToken(undefined);
-                                    window.google?.accounts.id.disableAutoSelect();
                                 }}
-                                className={`flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white bg-gradient-to-r from-red-500 to-pink-600 hover:scale-105`}
+                                className="flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white bg-gradient-to-r from-red-500 to-pink-600 hover:scale-105"
                             >
                                 Logout of Google
                             </button>
