@@ -1,11 +1,22 @@
 // frontend/app/components/ShiftCalendarUploader.tsx
 "use client";
-
+declare global {
+    interface Window {
+        google?: {
+            accounts: {
+                id: {
+                    disableAutoSelect: () => void;
+                    // Add more properties/methods here if needed
+                };
+            };
+        };
+    }
+}
 import { useState } from "react";
 import axios from "axios";
 import { upload } from "@vercel/blob/client";
 import { Loader2, CloudUpload, CheckCircle, AlertTriangle } from "lucide-react";
-import { GoogleLogin, googleLogout } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function ShiftCalendarUploader() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
@@ -124,16 +135,27 @@ export default function ShiftCalendarUploader() {
                                 className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:bg-gradient-to-r file:from-blue-500 file:to-purple-600 file:hover:opacity-90 file:transition-all file:duration-300 file:cursor-pointer text-white"
                             />
                         </div>
-                        <GoogleLogin
-                            onSuccess={(credentialResponse) => {
-                                const token = credentialResponse.credential;
-                                // store token in state or pass during API request
-                                setGoogleToken(token);
-                            }}
-                            onError={() => {
-                                console.log("Login Failed");
-                            }}
-                        />
+                        {!googleToken ? (
+                            <GoogleLogin
+                                onSuccess={(credentialResponse) => {
+                                    const token = credentialResponse.credential;
+                                    setGoogleToken(token);
+                                }}
+                                onError={() => {
+                                    console.log("Login Failed");
+                                }}
+                            />
+                        ) : (
+                            <button
+                                onClick={() => {
+                                    setGoogleToken(undefined);
+                                    window.google?.accounts.id.disableAutoSelect();
+                                }}
+                                className={`flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white bg-gradient-to-r from-red-500 to-pink-600 hover:scale-105`}
+                            >
+                                Logout of Google
+                            </button>
+                        )}
                         <button
                             type="submit"
                             className={`flex items-center justify-center w-full px-4 py-3 rounded-xl font-bold transition-all duration-300 text-white ${
