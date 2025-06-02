@@ -8,8 +8,8 @@ export const maxDuration = 60; // Increase timeout limit
 
 export async function POST(req: NextRequest) {
     try {
-        const { fileUrl, name_to_search } = await req.json();
-        console.log("Sending to Python API:", { fileUrl, name_to_search });
+        const { fileUrl, name_to_search, google_token } = await req.json();
+        console.log("Sending to Python API:", { fileUrl, name_to_search, google_token });
 
         if (!fileUrl || !name_to_search) {
             return NextResponse.json(
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         // Call the Python backend to process the file
         const pythonApiResponse = await axios.post(
             `${process.env.PYTHON_API_URL}/api/process`,
-            { fileUrl, name_to_search },
+            { fileUrl, name_to_search, google_token },
             { responseType: "arraybuffer" }
         );
 
