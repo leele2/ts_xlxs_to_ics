@@ -24,31 +24,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Pydantic model for request body
 class ProcessRequest(BaseModel):
     fileUrl: str
     name_to_search: str
+    google_token: str | None = None
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@app.post("/api/process", 
-          response_description="An ICS calendar file containing work shifts",
-          tags=["Shift Processing"],
-          responses={
-              400: {"description": "Bad Request - Missing or invalid input"},
-              500: {"description": "Internal Server Error - Processing failed"}
-          })
+
+@app.post(
+    "/api/process",
+    response_description="An ICS calendar file containing work shifts",
+    tags=["Shift Processing"],
+    responses={
+        400: {"description": "Bad Request - Missing or invalid input"},
+        500: {"description": "Internal Server Error - Processing failed"},
+    },
+)
 async def process_file(data: ProcessRequest):
     """Process an Excel file URL and generate an ICS calendar for a given employee's shifts.
-    
+
     Args:
         request: A JSON object with `fileUrl` (URL of the Excel file) and `name_to_search` (employee name).
-    
+
     Returns:
         A downloadable ICS file with shift events.
-    
+
     Raises:
         HTTPException: 400 if file download fails, 500 for processing errors.
     """
@@ -58,7 +64,9 @@ async def process_file(data: ProcessRequest):
         name_to_search = data.name_to_search
 
         if not file_url or not name_to_search:
-            raise HTTPException(status_code=400, detail="Missing fileUrl or name_to_search")
+            raise HTTPException(
+                status_code=400, detail="Missing fileUrl or name_to_search"
+            )
 
         # Download the file
         logger.info(f"Downloading file from: {file_url}")
@@ -103,12 +111,21 @@ async def process_file(data: ProcessRequest):
                 logger.info("Events added to Google Calendar.")
             except Exception as e:
                 logger.error(f"Google Calendar sync failed: {str(e)}")
+
+        return Response(
+            content=ics_content,
+            media_type="text/calendar",
+            headers={"Content-Disposition": "attachment; filename=shifts.ics"},
+        )
     except requests.RequestException as e:
         logger.error(f"Failed to download file: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to download file: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 
 @app.get("/api/health")
 async def health_check():
