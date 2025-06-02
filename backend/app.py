@@ -107,8 +107,9 @@ async def process_file(data: ProcessRequest):
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
-@app.get("/api/health")
+@app.get("/api/health", include_in_schema=False)
 async def health_check():
+    return JSONResponse(content={"status": "healthy"}, status_code=200)
 @app.get("/api/test", include_in_schema=False)
 async def test_process(request: Request):
     if request.client.host not in ("127.0.0.1", "::1"):
