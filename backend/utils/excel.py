@@ -150,7 +150,6 @@ def extract_shift_details(shift_time: str) -> Tuple[Optional[str], Optional[floa
     # Match standard shift time format: HH:MM-HH:MM
     match = re.match(r"(\d{1,2}:\d{2})-(\d{1,2}:\d{2})", shift_time)
     if not match:
-        logger.warning(f"Invalid shift format: {shift_time}")
         return None, None
 
     start_time_str, end_time_str = match.groups()
@@ -180,7 +179,6 @@ def is_date_like(value: Union[str, float, int]) -> Optional[str]:
         fixed_date = fix_date(value_str)
         return fixed_date
     except ValueError:
-        logger.info(f"cell {value} is not date like")
         return None
 
 
@@ -236,7 +234,6 @@ def search_name_and_extract_shift(
                     # Scan leftward for a shift time
                     for lc in range(c - 1, -1, -1):
                         shift_candidate = df.iat[r, lc]
-                        logger.info(f"Checking '{shift_candidate}' for shift time")
                         start_time, duration = extract_shift_details(
                             str(shift_candidate)
                         )
