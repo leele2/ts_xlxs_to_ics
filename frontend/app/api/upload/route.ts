@@ -6,13 +6,6 @@ export async function POST(request: NextRequest) {
     try {
         const body = (await request.json()) as HandleUploadBody;
 
-        // Check file size before uploading (20 MB limit)
-        if (body.size && body.size > 20 * 1024 * 1024) {
-            return NextResponse.json(
-                { error: "File exceeds 20MB limit" },
-                { status: 413 } // Payload Too Large
-            );
-        }
         
         const jsonResponse = await handleUpload({
             body,
