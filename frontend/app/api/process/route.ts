@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
             );
         }
         
-        const url = new URL(fileUrl);
-        if (!url.hostname.startsWith(blobPrefix)) {
-            return NextResponse.json({ error: "Unauthorized blob URL" }, { status: 403 });
-        }
+       // const url = new URL(fileUrl);
+       // if (!url.hostname.startsWith(blobPrefix)) {
+         //   return NextResponse.json({ error: "Unauthorized blob URL" }, { status: 403 });
+      //  }
 
         // Call the Python backend to process the file
         const pythonApiResponse = await axios.post(
