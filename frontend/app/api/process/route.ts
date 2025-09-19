@@ -5,10 +5,10 @@ import { del } from "@vercel/blob";
 
 export const maxDuration = 60; // Increase timeout limit
 
-const rwToken = process.env.BLOB_READ_WRITE_TOKEN;
-if (!rwToken) throw new Error("Missing BLOB_READ_WRITE_TOKEN");
-const match = rwToken.match(/^vercel_blob_rw_([^_]+)_/);
-if (!match) throw new Error("Invalid token format");
+// const rwToken = process.env.BLOB_READ_WRITE_TOKEN;
+// if (!rwToken) throw new Error("Missing BLOB_READ_WRITE_TOKEN");
+// const match = rwToken.match(/^vercel_blob_rw_([^_]+)_/);
+// if (!match) throw new Error("Invalid token format");
 // const blobPrefix = match[1]; 
 
 
